@@ -20,32 +20,19 @@ class PicoZCache extends AbstractPicoPlugin
     private $cacheXHTML = false;
     private $cacheFileName;
 
-    public function onConfigLoaded(array &$settings)
-    {
-        if (isset($config['cache_dir'])) {
-
-            // ensure cache_dir ends with '/'
-            $lastchar = substr($config['cache_dir'], -1);
-            if ($lastchar !== '/') {
-                $config['cache_dir'] = $config['cache_dir'].'/';
-            }
-            $this->cacheDir = $config['cache_dir'];
-        }
-        if (isset($config['cache_time'])) {
-            $this->cacheTime = $config['cache_time'];
-        }
-        if (isset($config['cache_enabled'])) {
-            $this->doCache = $config['cache_enabled'];
-        }
-        if (isset($config['cache_xhtml_output'])) {
-            $this->cacheXHTML = $config['cache_xhtml_output'];
-        }
-    }
+	public function onConfigLoaded(array &$config)
+	{
+		$this->doCache = $this->getPluginConfig('enabled', false);
+		$this->cacheTime = $this->getPluginConfig('time', 604800);
+		$this->cacheXHTML = $this->getPluginConfig('xhtml_output', false);
+		$this->cacheDir = trim($this->getPluginConfig('dir', 'content/cache/'),'/').'/';
+	}
 
     public function onRequestUrl(&$url)
     {
+        $query = (!empty($_GET)) ? '__'.md5(serialize($_GET)) : null;
         //replace any character except numbers and digits with a '-' to form valid file names
-        $this->cacheFileName = $this->cacheDir . preg_replace('/[^A-Za-z0-9_\-]/', '_', $url) . '.html';
+        $this->cacheFileName = $this->cacheDir . preg_replace('/[^A-Za-z0-9_\-]/', '_', $url.$query) . '.html';
 
         //if a cached file exists and the cacheTime is not expired, load the file and exit
         if ($this->doCache && file_exists($this->cacheFileName) && (time() - filemtime($this->cacheFileName)) < $this->cacheTime) {
