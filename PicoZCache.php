@@ -51,7 +51,6 @@ class PicoZCache extends AbstractPicoPlugin
         if ($this->doCache && file_exists($this->cacheFileName) && (time() - filemtime($this->cacheFileName)) < $this->cacheTime) {
             header("Expires: " . gmdate("D, d M Y H:i:s", $this->cacheTime + filemtime($this->cacheFileName)) . " GMT");
             ($this->cacheXHTML) ? header('Content-Type: application/xhtml+xml') : header('Content-Type: text/html');
-            error_log($this->cacheFileName);
             die(readfile($this->cacheFileName));
         }
     }
